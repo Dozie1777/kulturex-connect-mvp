@@ -1,0 +1,6 @@
+import Navbar from "@/components/Navbar";
+import StatCard from "@/components/StatCard";
+import FeatureCard from "@/components/FeatureCard";
+export default function DashboardPage() {
+  return <><Navbar/><main className="container"><section className="section"><div className="badge">Seller Dashboard</div><h1 style={{fontSize:42}}>Seller performance centre</h1><p className="lead">A seller dashboard for listings, orders, revenue, and trust signals.</p></section><section className="section"><div className="grid grid-3"><StatCard title="Active Listings" value="18" subtitle="Products, services, and cultural experiences"/><StatCard title="Monthly Orders" value="42" subtitle="Demo marketplace activity"/><StatCard title="Moderation Flags" value="3" subtitle="Potential contact-sharing risks detected"/></div></section><section className="section"><div className="grid grid-2"><FeatureCard title="Moderation Preview" description="Example: Listing description contains a phone number. The system flags it for review before publication."/><FeatureCard title="Growth Pipeline" description="Upload listing → Moderation review → Publish → Order → Delivery confirmation → Seller payout."/></div></section></main></>;
+}
