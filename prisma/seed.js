@@ -1,16 +1,26 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+
 async function main() {
-  await prisma.listing.createMany({ data: [
-    { title:"Premium Jollof Rice Spice", origin:"Nigeria", category:"Foodstuff", price:8, seller:"Kulturex Foods" },
-    { title:"Handmade Ankara Tote Bag", origin:"Ghana", category:"Fashion", price:35, seller:"Accra Craft Studio" },
-    { title:"Online Yoruba Language Session", origin:"Nigeria", category:"Service", price:25, seller:"Culture Tutor" }
-  ]});
-  await prisma.seller.createMany({ data: [
-    { name:"Kulturex Foods", country:"Nigeria", category:"Foodstuff", verified:true },
-    { name:"Accra Craft Studio", country:"Ghana", category:"Fashion", verified:true },
-    { name:"Culture Tutor", country:"Nigeria", category:"Education", verified:false }
-  ]});
-  console.log("Kulturex Connect seed complete.");
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Demo fixtures must not be seeded in production.");
+  }
+  if (process.env.ALLOW_DEMO_SEED !== "true") {
+    console.log("No demo records were created. Set ALLOW_DEMO_SEED=true in development to load fixtures.");
+    return;
+  }
+  const demoSeller = await prisma.seller.create({
+    data: { name: "Demo Kulturex Seller", country: "Ghana", category: "Crafts", verified: false },
+  });
+  await prisma.listing.create({
+    data: {
+      title: "Demonstration Ankara Fabric", description: "Development-only demonstration product.",
+      origin: "Ghana", category: "Fashion", price: 12.5, priceMinor: 1250, stock: 2,
+      seller: demoSeller.name, sellerId: demoSeller.id, status: "DEMO_ONLY",
+    },
+  });
+  console.log("Development-only, non-public demo records created.");
 }
-main().catch((e)=>{ console.error(e); process.exit(1); }).finally(async()=>{ await prisma.$disconnect(); });
+
+main().catch((error) => { console.error(error); process.exitCode = 1; })
+  .finally(async () => { await prisma.$disconnect(); });
