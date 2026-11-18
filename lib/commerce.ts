@@ -26,3 +26,10 @@ export function calculateTotal(unitPriceMinor: number, quantity: number): number
 export function mayReleaseInventory(status: string): boolean {
   return status === ORDER_STATUS.PENDING_PAYMENT;
 }
+
+export function poundsToPence(input: string) {
+  const normalized = input.trim();
+  if (!/^\d{1,6}(?:\.\d{1,2})?$/.test(normalized)) throw new Error("Enter a valid GBP amount, such as 12.50.");
+  const [pounds, fraction = ""] = normalized.split(".");
+  return Number(pounds) * 100 + Number(fraction.padEnd(2, "0"));
+}
