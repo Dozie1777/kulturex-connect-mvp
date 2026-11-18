@@ -1,33 +1,93 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 model Listing {
-  id        String   @id @default(cuid())
-  title     String
-  origin    String
-  category  String
-  price     Float
-  seller    String
-  status    String   @default("Active")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  title         String
+  description   String   @default("")
+  origin        String
+  category      String
+  price         Float
+  // Integer minor units are authoritative for new orders; price is legacy display data.
+  priceMinor    Int?
+  currency      String   @default("gbp")
+  stock         Int      @default(0)
+  seller        String
+  sellerId      String?
+  sellerProfile Seller?  @relation(fields: [sellerId], references: [id])
+  orders        Order[]
+  status        String   @default("Active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status, category])
+  @@index([sellerId])
 }
 
 model Seller {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   country   String
   category  String
-  verified  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  verified  Boolean   @default(false)
+  ownerId   String?   @unique
+  owner     User?     @relation(fields: [ownerId], references: [id])
+  listings  Listing[]
+  orders    Order[]
+  createdAt DateTime  @default(now())
 }
 
 model Order {
-  id           String   @id @default(cuid())
-  buyer        String
-  item         String
-  amount       Float
-  status       String
-  payoutStatus String
-  createdAt    DateTime @default(now())
+  id               String    @id @default(cuid())
+  buyer            String
+  item             String
+  amount           Float
+  status           String
+  payoutStatus     String
+  buyerId          String?
+  buyerAccount     User?     @relation(fields: [buyerId], references: [id])
+  listingId        String?
+  listing          Listing?  @relation(fields: [listingId], references: [id])
+  sellerId         String?
+  sellerProfile    Seller?   @relation(fields: [sellerId], references: [id])
+  quantity         Int       @default(1)
+  amountMinor      Int?
+  currency         String    @default("gbp")
+  stripeSessionId  String?   @unique
+  paymentExpiresAt DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([buyerId, createdAt])
+  @@index([sellerId, createdAt])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("BUYER")
+  seller       Seller?
+  sessions     Session[]
+  orders       Order[]
+  createdAt    DateTime  @default(now())
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
